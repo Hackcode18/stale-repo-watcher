@@ -1,44 +1,87 @@
-# Stale Repo Watcher
+# 🤖 Stale Repo Watcher
 
-An always-on agent that checks a GitHub repo for stale issues/PRs every morning, summarizes them with Amazon Bedrock (Nova Micro), and emails you a nudge report — no manual trigger required.
+[![AWS](https://img.shields.io/badge/AWS-Lambda-orange?logo=awslambda)](https://aws.amazon.com/lambda/)
+[![Bedrock](https://img.shields.io/badge/Amazon-Bedrock-blueviolet?logo=amazonaws)](https://aws.amazon.com/bedrock/)
+[![EventBridge](https://img.shields.io/badge/EventBridge-Scheduler-yellow?logo=amazonaws)](https://aws.amazon.com/eventbridge/)
+[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey)](#)
 
-## What it does
+> An always-on agent that checks a GitHub repo for stale issues and PRs every morning, summarizes them with **Amazon Bedrock (Nova Micro)**, and emails a nudge report — no manual trigger required.
 
-- **Trigger:** EventBridge Scheduler fires on a daily cron schedule
-- **Action:** Lambda fetches open issues/PRs from a GitHub repo, filters for items untouched 7+ days, sends them to Bedrock for summarization
-- **Output:** Emails you a prioritized report via SNS
+---
 
-## Proof It Ran Automatically
+## ✨ What It Does
 
-**EventBridge Schedule configured:**
-![Schedule Detail](<schedule detail.png>)
+| | |
+|---|---|
+| ⏰ **Trigger** | EventBridge Scheduler fires on a daily cron schedule |
+| 🔍 **Action** | Lambda fetches open issues/PRs, filters items untouched 7+ days |
+| 🧠 **Intelligence** | Amazon Bedrock (Nova Micro) turns the raw list into a prioritized report |
+| 📬 **Output** | SNS emails you the report — nothing to open, it's just there |
 
-**Lambda test execution succeeded:**
-![Lambda Test](<Lambda test success.png>)
+---
 
-**IAM permissions configured:**
-![IAM Role](<IAM role.png>)
-
-**SNS email subscription confirmed:**
-![SNS Subscription](<SNS subscription.png>)
-
-**Automated email report received:**
-![Email Report](<email report.png>)
+## 🏗️ Architecture
 
 ```
-EventBridge Scheduler (daily cron)
-        │
-        ▼
-    AWS Lambda ──► GitHub REST API
-        │
-        ▼
-  Amazon Bedrock (Nova Micro)
-        │
-        ▼
-     Amazon SNS ──► Email
+┌─────────────────────────┐
+│  EventBridge Scheduler  │   daily cron trigger
+└────────────┬─────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│       AWS Lambda        │──────►  GitHub REST API
+│   (stale-repo-watcher)  │         (fetch open issues/PRs)
+└────────────┬─────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│   Amazon Bedrock         │   Nova Micro summarizes +
+│   (Nova Micro)           │   drafts the nudge report
+└────────────┬─────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│       Amazon SNS         │──────►  📧 Email report
+└─────────────────────────┘
 ```
 
-## Repo structure
+---
+
+## ✅ Proof It Ran Automatically
+
+<table>
+<tr>
+<td align="center" width="50%">
+<b>EventBridge Schedule Configured</b><br><br>
+<img src="schedule-detail.png" width="90%">
+</td>
+<td align="center" width="50%">
+<b>Lambda Test Execution Succeeded</b><br><br>
+<img src="lambda-test-success.png" width="90%">
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<b>IAM Permissions Configured</b><br><br>
+<img src="iam-role.png" width="90%">
+</td>
+<td align="center" width="50%">
+<b>SNS Email Subscription Confirmed</b><br><br>
+<img src="sns-subscription.png" width="90%">
+</td>
+</tr>
+<tr>
+<td align="center" colspan="2">
+<b>Automated Email Report Received</b><br><br>
+<img src="email-report.png" width="60%">
+</td>
+</tr>
+</table>
+
+---
+
+## 📁 Repo Structure
 
 ```
 stale-repo-watcher/
@@ -48,75 +91,118 @@ stale-repo-watcher/
 └── .gitignore
 ```
 
-## Deploy via AWS Console (step by step)
+---
 
-### 1. Create the SNS topic (for email alerts)
+## 🚀 Deploy via AWS Console
+
+<details>
+<summary><b>1. Create the SNS topic (for email alerts)</b></summary>
+<br>
+
 1. AWS Console → **SNS** → Topics → Create topic → type: **Standard** → name: `stale-repo-watcher-alerts`
 2. Open the topic → Create subscription → protocol: **Email** → enter your email
-3. Check your inbox and click **Confirm subscription** (report emails won't arrive until you do this)
-4. Copy the **Topic ARN** — you'll need it in step 3
+3. Check your inbox and click **Confirm subscription**
+4. Copy the **Topic ARN** — needed later
 
-### 2. Request Bedrock model access (do this first, can take time to approve)
-1. AWS Console → **Bedrock** → Model access (left sidebar)
-2. Request access to **Amazon Nova Micro**
-3. Wait for status to show "Access granted" before testing the Lambda
+</details>
 
-### 3. Create the Lambda function
+<details>
+<summary><b>2. Request Bedrock model access</b></summary>
+<br>
+
+1. AWS Console → **Bedrock** → Model catalog
+2. Search **Nova Micro** → confirm access (Amazon's own Nova models are often available instantly, no request needed)
+
+</details>
+
+<details>
+<summary><b>3. Create the Lambda function</b></summary>
+<br>
+
 1. AWS Console → **Lambda** → Create function
 2. Author from scratch → name: `stale-repo-watcher` → runtime: **Python 3.12**
-3. Once created, go to the **Code** tab → open `lambda_function.py` in the inline editor
-4. Delete the placeholder content, paste in the contents of `src/lambda_function.py` from this repo → **Deploy**
-5. Go to **Configuration → Environment variables** → add:
-   | Key | Value |
-   |---|---|
-   | `GITHUB_REPO` | `owner/repo-name` (the repo you want watched) |
-   | `STALE_DAYS` | `7` |
-   | `SNS_TOPIC_ARN` | the ARN from step 1 |
-   | `BEDROCK_MODEL_ID` | `amazon.nova-micro-v1:0` |
-6. Go to **Configuration → General configuration** → Edit → set **Timeout** to 30 seconds
+3. **Code** tab → paste in `src/lambda_function.py` contents → **Deploy**
+4. **Configuration → Environment variables**:
 
-### 4. Give the Lambda permission to call SNS and Bedrock
-1. Go to **Configuration → Permissions** → click the execution role link (opens IAM)
-2. Add permissions → Attach policies → search and attach `AWSLambdaBasicExecutionRole` (usually already there)
-3. Add permissions → Create inline policy → JSON tab → paste:
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {"Effect": "Allow", "Action": "sns:Publish", "Resource": "YOUR_SNS_TOPIC_ARN"},
-       {"Effect": "Allow", "Action": "bedrock:InvokeModel", "Resource": "*"}
-     ]
-   }
-   ```
-4. Name it `stale-watcher-permissions` → Create policy
+| Key | Value |
+|---|---|
+| `GITHUB_REPO` | `owner/repo-name` |
+| `STALE_DAYS` | `7` |
+| `SNS_TOPIC_ARN` | your topic ARN from step 1 |
+| `BEDROCK_MODEL_ID` | `amazon.nova-micro-v1:0` |
 
-### 5. Test it manually before scheduling
-1. In Lambda → **Test** tab → create a test event (any dummy JSON, e.g. `{}`)
-2. Click **Test** → check execution result and your email inbox
-3. Fix any errors here before moving to step 6 — this is faster to debug than waiting on a cron trigger
+5. **Configuration → General configuration** → Edit → **Timeout: 30 sec**
 
-### 6. Schedule it with EventBridge Scheduler
-1. AWS Console → **EventBridge** → Scheduler → Create schedule
-2. Name: `stale-repo-watcher-schedule`
-3. Schedule pattern: **Recurring schedule** → Cron-based → e.g. `0 13 * * ? *` (7 AM CT / adjust for your timezone — this is in UTC)
-4. Target: **AWS Lambda → Invoke** → select `stale-repo-watcher`
-5. Action after schedule completes: leave default
-6. On the permissions step, choose **Create new role for this schedule** (console handles the trust policy automatically — this is the part that's easy to misconfigure via CLI, the console does it for you)
-7. Create schedule
+</details>
 
-### 7. Confirm it fired on its own
-- Wait for the next scheduled run, or check **CloudWatch Logs** for the Lambda (Lambda → Monitor → View CloudWatch logs) to see execution history
-- Screenshot the CloudWatch log timestamp + the email you received — this is your "it ran without me" proof for the article
+<details>
+<summary><b>4. Grant Lambda permission to call SNS + Bedrock</b></summary>
+<br>
 
-## Environment variables reference
+1. **Configuration → Permissions** → click execution role (opens IAM)
+2. Add permissions → Create inline policy → JSON tab:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {"Effect": "Allow", "Action": "sns:Publish", "Resource": "YOUR_SNS_TOPIC_ARN"},
+    {"Effect": "Allow", "Action": "bedrock:InvokeModel", "Resource": "*"}
+  ]
+}
+```
+
+3. Name it `stale-watcher-permissions` → Create policy
+
+</details>
+
+<details>
+<summary><b>5. Test manually before scheduling</b></summary>
+<br>
+
+1. **Test** tab → create test event → any dummy `{}` → **Test**
+2. Check execution result + your inbox
+3. Fix errors here — faster than waiting on a live cron trigger
+
+</details>
+
+<details>
+<summary><b>6. Schedule with EventBridge Scheduler</b></summary>
+<br>
+
+1. **EventBridge → Scheduler → Create schedule**
+2. Recurring or one-time — cron: `0 13 * * ? *` (adjust for your timezone)
+3. Target: **AWS Lambda → Invoke** → `stale-repo-watcher`
+4. Permissions: **Create new role for this schedule**
+5. **Create schedule**
+
+</details>
+
+<details>
+<summary><b>7. Confirm it fired on its own</b></summary>
+<br>
+
+Check **CloudWatch Logs** (Lambda → Monitor → View CloudWatch logs) for an execution timestamp matching the schedule — plus the email that landed in your inbox without you clicking anything.
+
+</details>
+
+---
+
+## ⚙️ Environment Variables
 
 | Variable | Description | Example |
 |---|---|---|
 | `GITHUB_REPO` | Repo to monitor | `octocat/Hello-World` |
 | `STALE_DAYS` | Days of inactivity before flagging | `7` |
-| `SNS_TOPIC_ARN` | SNS topic to publish reports to | `arn:aws:sns:us-east-1:123456789012:stale-repo-watcher-alerts` |
-| `BEDROCK_MODEL_ID` | Bedrock model for summarization | `amazon.nova-micro-v1:0` |
+| `SNS_TOPIC_ARN` | SNS topic for reports | `arn:aws:sns:us-east-1:xxxx:stale-repo-watcher-alerts` |
+| `BEDROCK_MODEL_ID` | Bedrock model used | `amazon.nova-micro-v1:0` |
 
-## Cost note
+---
 
-All services used (Lambda, EventBridge Scheduler, SNS, Bedrock Nova Micro at this scale) fall within AWS Free Tier for a personal project running a daily job. Monitor usage in Billing if you extend it.
+## 💸 Cost Note
+
+All services used (Lambda, EventBridge Scheduler, SNS, Bedrock Nova Micro at this scale) fall within **AWS Free Tier** for a personal project running on a schedule. Set a billing alarm in AWS Budgets if you plan to extend or scale this up.
+
+---
+
+<p align="center"><i>Built for the AWS Builder Center Weekend Agent Challenge 🏆</i></p>
