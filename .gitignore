@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+function.zip
+out.json
+.DS_Store
