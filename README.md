@@ -8,6 +8,23 @@ An always-on agent that checks a GitHub repo for stale issues/PRs every morning,
 - **Action:** Lambda fetches open issues/PRs from a GitHub repo, filters for items untouched 7+ days, sends them to Bedrock for summarization
 - **Output:** Emails you a prioritized report via SNS
 
+## Proof It Ran Automatically
+
+**EventBridge Schedule configured:**
+![Schedule Detail](<schedule detail.png>)
+
+**Lambda test execution succeeded:**
+![Lambda Test](<Lambda test success.png>)
+
+**IAM permissions configured:**
+![IAM Role](<IAM role.png>)
+
+**SNS email subscription confirmed:**
+![SNS Subscription](<SNS subscription.png>)
+
+**Automated email report received:**
+![Email Report](<email report.png>)
+
 ```
 EventBridge Scheduler (daily cron)
         │
