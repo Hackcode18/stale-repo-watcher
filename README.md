@@ -19,6 +19,31 @@
 | 🧠 **Intelligence** | Amazon Bedrock (Nova Micro) turns the raw list into a prioritized report |
 | 📬 **Output** | SNS emails you the report — nothing to open, it's just there |
 
+
+**EventBridge Schedule configured:**
+
+
+![Schedule Detail](<schedule detail.png>)
+
+**Lambda test execution succeeded:**
+
+
+![Lambda Test](<Lambda test success.png>)
+
+**IAM permissions configured:**
+
+
+![IAM Role](<IAM role.png>)
+
+**SNS email subscription confirmed:**
+
+
+![SNS Subscription](<SNS subscription.png>)
+
+**Automated email report received:**
+
+
+![Email Report](<email report.png>)
 ---
 
 ## 🏗️ Architecture
