@@ -79,27 +79,27 @@
 <tr>
 <td align="center" width="50%">
 <b>EventBridge Schedule Configured</b><br><br>
-<img src="schedule-detail.png" width="90%">
+<img src="schedule detail.png" width="90%">
 </td>
 <td align="center" width="50%">
 <b>Lambda Test Execution Succeeded</b><br><br>
-<img src="lambda-test-success.png" width="90%">
+<img src="lambda test success.png" width="90%">
 </td>
 </tr>
 <tr>
 <td align="center" width="50%">
 <b>IAM Permissions Configured</b><br><br>
-<img src="iam-role.png" width="90%">
+<img src="iam role.png" width="90%">
 </td>
 <td align="center" width="50%">
 <b>SNS Email Subscription Confirmed</b><br><br>
-<img src="sns-subscription.png" width="90%">
+<img src="sns subscription.png" width="90%">
 </td>
 </tr>
 <tr>
 <td align="center" colspan="2">
 <b>Automated Email Report Received</b><br><br>
-<img src="email-report.png" width="60%">
+<img src="email report.png" width="60%">
 </td>
 </tr>
 </table>
