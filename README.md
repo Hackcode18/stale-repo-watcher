@@ -83,17 +83,17 @@
 </td>
 <td align="center" width="50%">
 <b>Lambda Test Execution Succeeded</b><br><br>
-<img src="lambda test success.png" width="90%">
+<img src="Lambda test success.png" width="90%">
 </td>
 </tr>
 <tr>
 <td align="center" width="50%">
 <b>IAM Permissions Configured</b><br><br>
-<img src="iam role.png" width="90%">
+<img src="IAM role.png" width="90%">
 </td>
 <td align="center" width="50%">
 <b>SNS Email Subscription Confirmed</b><br><br>
-<img src="sns subscription.png" width="90%">
+<img src="SNS subscription.png" width="90%">
 </td>
 </tr>
 <tr>
